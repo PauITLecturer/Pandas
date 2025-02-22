@@ -15,7 +15,7 @@ if 'progress' not in st.session_state:
     st.session_state['progress'] = []
 
 # Main title
-st.title("Learn Pandas and Matplotlib with Streamlit")
+st.title("Pauls Most Amazing Program to Learn Pandas and Matplotlib")
 
 # File uploader
 st.header("Upload Your Dataset")

@@ -128,9 +128,9 @@ stages = [
      "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\nplt.bar(df['x_col'], df['y_col'])\nplt.xlabel('X Axis')\nplt.ylabel('Y Axis')\plt.title('Bar Chart')\nst.pyplot(plt)", 
      "task": "Plot a bar chart with `plt.bar(df['x_col'], df['y_col'])`, label axes, add a title, and display with `st.pyplot(plt)` using columns from your dataset."},
     {"name": "Basic Visualizations - Histogram", 
-     "desc": "Visualize the distribution of a numeric column using linspace for bins.", 
-     "example": "import matplotlib.pyplot as plt\nimport numpy as np\n\n# Define bins with linspace\nbins = np.linspace(df['numeric_col'].min(), df['numeric_col'].max(), 11)\nplt.figure(figsize=(6, 4))\nplt.hist(df['numeric_col'], bins=bins)\nplt.xlabel('Value')\nplt.ylabel('Frequency')\nplt.title('Histogram')\nst.pyplot(plt)", 
-     "task": "Create a histogram with `plt.hist(df['col'], bins=np.linspace(...))`, using `np.linspace` to set 10 bins between min and max, label axes, add a title, and display with `st.pyplot(plt)`."},
+     "desc": "Visualize the distribution of a numeric column", 
+     "example": "import matplotlib.pyplot as plt\nimport numpy as np\n\n# Auto-bin selection using auto mode\nplt.figure(figsize=(6, 4))\nplt.hist(df['numeric_col'], bins='auto', edgecolor='black')\nplt.xlabel('Value')\nplt.ylabel('Frequency')\nplt.title('Histogram')\nst.pyplot(plt)", 
+     "task": "Create a histogram with label axes, add a title, and display with `st.pyplot(plt)`."},
     {"name": "Basic Visualizations - Specific Value Charts", 
      "desc": "Create a bar chart for rows matching a specific value in a column.", 
      "example": "import matplotlib.pyplot as plt\n\n# Subset the data\nsubset = df[df['col'] == 'value']\n\n# Create figure and bar chart\nplt.figure(figsize=(6, 4))\nplt.bar(subset['x_col'], subset['y_col'])\nplt.xlabel('x_col')\nplt.ylabel('y_col')\nplt.title('Chart for (specific data)')\nst.pyplot(plt)", 
@@ -293,7 +293,6 @@ def display_stage(stage_idx):
                 explanation += "- **Bar Chart**: Created a bar chart with coded X and Y axes."
             elif "plt.hist(" in code:
                 explanation += "- **Histogram**: Showed the distribution of a numeric column.\n" \
-                              "  - **`np.linspace`**: Used to create evenly spaced bin edges between the column’s minimum and maximum values. Here, it divides the range into 10 intervals (11 edges), ensuring bins cover the full data range dynamically.\n" \
                               "  - **Bins**: The number of intervals or buckets the data is divided into. Each bar’s height shows the frequency (count) of values within that bin’s range."
             elif "df.groupby(" in code:
                 explanation += "- **Groupby**: Grouped data and calculated averages."

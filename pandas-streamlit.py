@@ -4,155 +4,198 @@ import matplotlib.pyplot as plt
 from streamlit_ace import st_ace
 import io
 import sys
+import numpy as np
 
 # Set page config to wide layout
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Learn Pandas & Matplotlib", page_icon="📊")
+
+# Custom CSS for prettier design
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .sidebar .sidebar-content {
+        background-color: #e6f0ff;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+        padding: 8px 16px;
+    }
+    .stButton>button:hover {
+        background-color: #45a049;
+    }
+    .stHeader {
+        color: #2c3e50;
+        font-family: 'Arial', sans-serif;
+    }
+    .stSubheader {
+        color: #34495e;
+        font-family: 'Arial', sans-serif;
+    }
+    .stMarkdown {
+        font-family: 'Arial', sans-serif;
+        color: #555;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Initialize session state
 if 'df' not in st.session_state:
     st.session_state['df'] = None
-if 'progress' not in st.session_state:
-    st.session_state['progress'] = []
+if 'current_stage_idx' not in st.session_state:
+    st.session_state['current_stage_idx'] = 0
 
 # Main title
-st.title("Pauls Most Amazing Program to Learn Pandas and Matplotlib")
+st.title("📊 Paul’s Amazing Pandas & Matplotlib Learning Adventure")
 
 # File uploader
-st.header("Upload Your Dataset")
+st.header("Upload Your Dataset", anchor=None)
 uploaded_file = st.file_uploader("Drag and drop a CSV file here", type="csv")
 if uploaded_file is not None:
     try:
         st.session_state['df'] = pd.read_csv(uploaded_file)
-        st.success("File uploaded successfully!")
+        st.success("🎉 File uploaded successfully!")
         st.write("### Preview of Uploaded Dataset")
-        st.dataframe(st.session_state['df'].head())
+        st.dataframe(st.session_state['df'].head(), use_container_width=True)
     except Exception as e:
-        st.error(f"Error loading CSV: {e}")
+        st.error(f"🚨 Error loading CSV: {e}")
         st.session_state['df'] = None
 
 # Stop if no dataset is loaded
 if st.session_state['df'] is None:
-    st.warning("Please upload a CSV file to proceed.")
+    st.warning("⚠️ Please upload a CSV file to proceed.")
     st.stop()
 
 # Define learning stages
 stages = [
-    {"name": "Introduction to Pandas", 
-     "desc": "Learn to load and inspect data with Pandas.", 
-     "example": "import pandas as pd\n\n# Show first 5 rows\nprint(df.head())", 
-     "task": "Display the first 5 rows of the dataset using `print(df.head())`."},
-    {"name": "Data Cleaning - Missing Values", 
-     "desc": "Check for missing values in your dataset.", 
-     "example": "# Check missing values\nprint(df.isnull().sum())", 
-     "task": "Show the count of missing values per column with `print(df.isnull().sum())`."},
-    {"name": "Data Cleaning - Drop Missing Values", 
-     "desc": "Remove rows with missing values.", 
-     "example": "# Drop rows with missing values\ndf_cleaned = df.dropna()\nprint(df_cleaned.head())", 
-     "task": "Drop rows with missing values, assign to `df_cleaned`, and show the first 5 rows with `print(df_cleaned.head())`."},
-    {"name": "Data Selection - Columns", 
-     "desc": "Select specific columns from the DataFrame.", 
-     "example": "# Select columns\nprint(df[['column1', 'column2']])", 
-     "task": "Select and display two columns of your choice with `print(df[['col1', 'col2']])`."},
-    {"name": "Data Selection - Rows (Filtering)", 
+    {"name": "Basic Pandas - Shape", 
+     "desc": "Learn about the dimensions of your DataFrame with shape.", 
+     "example": "import pandas as pd\n\n# Show number of rows and columns\nprint(df.shape)", 
+     "task": "Display the shape of the dataset using `print(df.shape)`."},
+    {"name": "Basic Pandas - Head and Tail", 
+     "desc": "Inspect the first and last rows of your dataset.", 
+     "example": "# Show first 5 rows\nprint(df.head())\n# Show last 5 rows\nprint(df.tail())", 
+     "task": "Display the first 5 rows with `print(df.head())` and last 5 rows with `print(df.tail())`."},
+    {"name": "Basic Pandas - Data Types (dtypes)", 
+     "desc": "Check the data types of each column.", 
+     "example": "# Show data types\nprint(df.dtypes)", 
+     "task": "Show the data types of all columns with `print(df.dtypes)`."},
+    {"name": "Basic Pandas - Selecting a Single Column", 
+     "desc": "Select one column from the DataFrame.", 
+     "example": "# Select a single column\nprint(df['column_name'])", 
+     "task": "Select and display one column with `print(df['col'])`."},
+    {"name": "Basic Pandas - Selecting Multiple Columns", 
+     "desc": "Select multiple columns from the DataFrame.", 
+     "example": "# Select multiple columns\nprint(df[['col1', 'col2']])", 
+     "task": "Select and display two columns with `print(df[['col1', 'col2']])`."},
+    {"name": "Basic Pandas - Selecting Rows (Filtering)", 
      "desc": "Filter rows based on a condition.", 
-     "example": "# Filter rows\nprint(df[df['column'] > value])", 
+     "example": "# Filter rows\nprint(df[df['column'] > 10])", 
      "task": "Filter rows where a numeric column exceeds a value, e.g., `print(df[df['col'] > 10])`."},
-    {"name": "Descriptive Statistics", 
-     "desc": "Calculate summary statistics for numeric columns.", 
-     "example": "# Summary stats\nprint(df.describe())", 
-     "task": "Show descriptive statistics with `print(df.describe())`."},
-    {"name": "Value Counts", 
-     "desc": "Count occurrences in a categorical column.", 
-     "example": "# Value counts\nprint(df['column'].value_counts())", 
+    {"name": "Basic Pandas - Value Counts", 
+     "desc": "Count unique values in a column.", 
+     "example": "# Count unique values\nprint(df['column'].value_counts())", 
      "task": "Display value counts for a categorical column with `print(df['col'].value_counts())`."},
-    {"name": "Basic Line Plot", 
-     "desc": "Create a line plot of a numeric column.", 
-     "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\nplt.plot(df['numeric_col'])\nplt.title('Line Plot')\nst.pyplot(plt)", 
-     "task": "Plot a numeric column with `plt.plot(df['col'])`, add a title, and display with `st.pyplot(plt)`."},
-    {"name": "Scatter Plot", 
-     "desc": "Create a scatter plot of two numeric columns.", 
-     "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\nplt.scatter(df['col1'], df['col2'])\nplt.title('Scatter Plot')\nst.pyplot(plt)", 
-     "task": "Make a scatter plot with `plt.scatter(df['col1', df['col2'])`, add a title, and show with `st.pyplot(plt)`."},
-    {"name": "Bar Chart", 
-     "desc": "Create a bar chart from categorical data.", 
-     "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\ndf['col'].value_counts().plot(kind='bar')\nplt.title('Bar Chart')\nst.pyplot(plt)", 
-     "task": "Plot a bar chart of value counts with `df['col'].value_counts().plot(kind='bar')`, add a title, and use `st.pyplot(plt)`."},
-    {"name": "Histograms", 
-     "desc": "Visualize a numeric column’s distribution.", 
-     "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\nplt.hist(df['numeric_col'], bins=10)\nplt.title('Histogram')\nst.pyplot(plt)", 
-     "task": "Create a histogram with `plt.hist(df['col'], bins=10)`, add a title, and display with `st.pyplot(plt)`."},
-    {"name": "Groupby and Aggregation", 
-     "desc": "Group data and compute aggregates.", 
-     "example": "# Group and aggregate\nprint(df.groupby('cat_col')['num_col'].mean())", 
-     "task": "Group by a categorical column and show the mean of a numeric column with `print(df.groupby('cat_col')['num_col'].mean())`."},
-    {"name": "Sorting DataFrames", 
-     "desc": "Sort the DataFrame by a column.", 
-     "example": "# Sort DataFrame\ndf_sorted = df.sort_values(by='column')\nprint(df_sorted.head())", 
-     "task": "Sort by a column, assign to `df_sorted`, and show the head with `print(df_sorted.head())`."},
-    {"name": "Adding New Columns", 
-     "desc": "Add a new column to the DataFrame.", 
-     "example": "# Add column\ndf['new_col'] = df['col1'] + df['col2']\nprint(df.head())", 
-     "task": "Add a new column (e.g., `df['new_col'] = df['col1'] * 2`) and show the head with `print(df.head())`."},
-    {"name": "Renaming Columns", 
-     "desc": "Rename a column in the DataFrame.", 
-     "example": "# Rename column\ndf = df.rename(columns={'old': 'new'})\nprint(df.head())", 
-     "task": "Rename a column (e.g., `df = df.rename(columns={'old': 'new'})`) and show the head with `print(df.head())`."},
+    {"name": "Basic Pandas - loc", 
+     "desc": "Select data by label using loc.", 
+     "example": "# Select rows and columns by label\nprint(df.loc[0:2, ['col1', 'col2']])", 
+     "task": "Use `loc` to select the first 3 rows of two columns, e.g., `print(df.loc[0:2, ['col1', 'col2']])`."},
+    {"name": "Basic Pandas - iloc", 
+     "desc": "Select data by position using iloc.", 
+     "example": "# Select rows and columns by position\nprint(df.iloc[0:3, 0:2])", 
+     "task": "Use `iloc` to select the first 3 rows and first 2 columns, e.g., `print(df.iloc[0:2, 0:2])`."},
+    {"name": "Basic Data Cleaning - Describe", 
+     "desc": "Get summary statistics of numeric columns.", 
+     "example": "# Summary statistics\nprint(df.describe())", 
+     "task": "Show descriptive statistics with `print(df.describe())`."},
+    {"name": "Basic Data Cleaning - Averages", 
+     "desc": "Calculate the mean of numeric columns.", 
+     "example": "# Calculate averages\nprint(df.mean(numeric_only=True))", 
+     "task": "Display the mean of numeric columns with `print(df.mean(numeric_only=True))`."},
+    {"name": "Basic Visualizations - Line Graph", 
+     "desc": "Create a line graph with X and Y axes specified in code.", 
+     "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\nplt.plot(df['x_col'], df['y_col'])\nplt.xlabel('X Axis')\nplt.ylabel('Y Axis')\nplt.title('Line Graph')\nst.pyplot(plt)", 
+     "task": "Plot a line graph with `plt.plot(df['x_col'], df['y_col'])`, label axes, add a title, and display with `st.pyplot(plt)` using columns from your dataset."},
+    {"name": "Basic Visualizations - Bar Chart", 
+     "desc": "Create a bar chart with X and Y axes specified in code.", 
+     "example": "import matplotlib.pyplot as plt\n\nplt.figure(figsize=(6, 4))\nplt.bar(df['x_col'], df['y_col'])\nplt.xlabel('X Axis')\nplt.ylabel('Y Axis')\plt.title('Bar Chart')\nst.pyplot(plt)", 
+     "task": "Plot a bar chart with `plt.bar(df['x_col'], df['y_col'])`, label axes, add a title, and display with `st.pyplot(plt)` using columns from your dataset."},
+    {"name": "Basic Visualizations - Histogram", 
+     "desc": "Visualize the distribution of a numeric column using linspace for bins.", 
+     "example": "import matplotlib.pyplot as plt\nimport numpy as np\n\n# Define bins with linspace\nbins = np.linspace(df['numeric_col'].min(), df['numeric_col'].max(), 11)\nplt.figure(figsize=(6, 4))\nplt.hist(df['numeric_col'], bins=bins)\nplt.xlabel('Value')\nplt.ylabel('Frequency')\nplt.title('Histogram')\nst.pyplot(plt)", 
+     "task": "Create a histogram with `plt.hist(df['col'], bins=np.linspace(...))`, using `np.linspace` to set 10 bins between min and max, label axes, add a title, and display with `st.pyplot(plt)`."},
+    {"name": "Basic Visualizations - Specific Value Charts", 
+     "desc": "Create a bar chart for rows matching a specific value in a column.", 
+     "example": "import matplotlib.pyplot as plt\n\n# Subset the data\nsubset = df[df['col'] == 'value']\n\n# Create figure and bar chart\nplt.figure(figsize=(6, 4))\nplt.bar(subset['x_col'], subset['y_col'])\nplt.xlabel('x_col')\nplt.ylabel('y_col')\nplt.title('Chart for (specific data)')\nst.pyplot(plt)", 
+     "task": "Filter rows where a column equals a specific value (e.g., `df[df['col'] == 'value']`), then plot a bar chart with `plt.bar()` using two columns (e.g., 'x_col' and 'y_col'), label axes, add a title, and display with `st.pyplot(plt)`."},
 ]
 
-# Single sidebar layout
+# Sidebar layout
 with st.sidebar:
-    # Instructions first
-    st.title("Instructions")
+    st.markdown("### 📚 Instructions", unsafe_allow_html=True)
     st.write("**How to Use:**")
-    st.write("- Upload a CSV file to start.")
-    st.write("- Select a stage from the dropdown below.")
+    st.write("- Upload a CSV file to begin your journey.")
+    st.write("- Select a stage from the dropdown.")
     st.write("- Study the example and task.")
-    st.write("- Write code in the editor.")
-    st.write("- Use `print()` for text output (e.g., DataFrames).")
+    st.write("- Write code in the editor, adapting column names to your dataset.")
+    st.write("- Use `print()` for text output.")
     st.write("- Use `st.pyplot(plt)` for plots.")
     st.write("- Click 'Run Code' to see results.")
-    st.write("- Mark the stage complete when done.")
-    st.write("---")
+    st.markdown("---", unsafe_allow_html=True)
 
     # Stage selection
-    st.write("### Select a Stage")
-    current_stage = st.selectbox("Choose a stage", [s["name"] for s in stages], label_visibility="collapsed")
-    st.write("---")
+    st.markdown("### 🚀 Select a Stage", unsafe_allow_html=True)
+    current_stage_idx = st.selectbox(
+        "Choose a stage", 
+        range(len(stages)), 
+        format_func=lambda x: stages[x]["name"], 
+        index=st.session_state['current_stage_idx'],
+        label_visibility="collapsed"
+    )
+    st.session_state['current_stage_idx'] = current_stage_idx
+    st.markdown("---", unsafe_allow_html=True)
 
-    # Ticked-off stages
-    st.write("### Progress")
-    for stage in stages:
-        status = "✅" if stage["name"] in st.session_state['progress'] else "⬜"
-        st.write(f"{status} {stage['name']}")
+    # Sponsored by section
+    st.markdown("### Sponsored by:", unsafe_allow_html=True)
+    st.image("cassiecorp.png", width=200)
+    st.image("throngler.png", width=200)
 
 # Display stage content in main area
-def display_stage(stage_name):
-    stage = next(s for s in stages if s["name"] == stage_name)
-    st.header(stage["name"])
-    st.write(stage["desc"])
+def display_stage(stage_idx):
+    stage = stages[stage_idx]
+    st.header(stage["name"], anchor=None)
+    st.markdown(f"<div class='stMarkdown'>{stage['desc']}</div>", unsafe_allow_html=True)
 
-    st.subheader("Example Code")
+    st.subheader("Example Code", anchor=None)
     st.code(stage["example"], language="python")
 
-    st.subheader("Your Task")
-    st.write(stage["task"])
+    st.subheader("Your Task", anchor=None)
+    st.markdown(f"<div class='stMarkdown'>{stage['task']}</div>", unsafe_allow_html=True)
 
     # Code editor
-    st.write("Enter your code here:")
+    st.write("✍️ Enter your code here:")
     code = st_ace(
         language="python",
         theme="monokai",
-        key=f"editor_{stage_name}",
+        key=f"editor_{stage['name']}",
         height=200,
         show_gutter=True,
         wrap=True,
-        value=""
+        value="",
+        font_size=14
     )
 
     # Run button
-    if st.button("Run Code", key=f"run_{stage_name}"):
+    if st.button("Run Code", key=f"run_{stage['name']}"):
         if not code or code.strip() == "":
-            st.warning("Please enter code to run!")
+            st.warning("⚠️ Please enter code to run!")
             return
 
         # Define globals for exec
@@ -160,7 +203,8 @@ def display_stage(stage_name):
             'st': st,
             'df': st.session_state['df'],
             'pd': pd,
-            'plt': plt
+            'plt': plt,
+            'np': np
         }
 
         # Capture output
@@ -169,14 +213,13 @@ def display_stage(stage_name):
         sys.stdout = output_io
 
         try:
-            plt.close('all')  # Clear all previous figures
+            plt.close('all')  # Clear all existing figures
             exec(code, globals_dict)
             sys.stdout = sys_stdout
             output_text = output_io.getvalue()
 
             if output_text:
-                st.subheader("Text Output")
-                # Parse output to detect DataFrame or Series and display as table
+                st.subheader("Text Output", anchor=None)
                 try:
                     lines = output_text.strip().split('\n')
                     last_output = lines[-1] if lines else ""
@@ -185,7 +228,7 @@ def display_stage(stage_name):
                         exec(code, globals_dict, local_vars)
                         for var in local_vars.values():
                             if isinstance(var, (pd.DataFrame, pd.Series)):
-                                st.dataframe(var)
+                                st.dataframe(var, use_container_width=True)
                                 break
                         else:
                             st.code(output_text, language=None)
@@ -194,79 +237,80 @@ def display_stage(stage_name):
                 except Exception:
                     st.code(output_text, language=None)
             else:
-                st.info("No text output. Use `print()` to display results.")
+                st.info("ℹ️ No text output. Use `print()` to display results.")
 
             # Display plot if created
-            if plt.get_fignums():  # Check if a figure exists
-                st.subheader("Plot Output")
-                fig = plt.gcf()  # Get current figure
-                fig.set_size_inches(6, 4)  # Set smaller size
+            if plt.get_fignums():
+                st.subheader("Plot Output", anchor=None)
+                fig = plt.gcf()
+                fig.set_size_inches(6, 4)
                 st.pyplot(fig)
-                plt.close(fig)  # Close the figure after display
+                plt.close(fig)  # Close immediately after display
 
-            st.success("Code ran successfully!")
+            st.success("🎉 Code ran successfully!")
             
-            # Detailed explanation based on the code
-            st.write("#### What This Code Does:")
+            # Detailed explanation
+            st.markdown("#### What This Code Does:", unsafe_allow_html=True)
             explanation = f"This code executed the task: \"{stage['task']}\"\n\nHere’s what it did:\n"
             
-            if "df.describe()" in code:
-                explanation += "- **Descriptive Statistics**: You used `df.describe()` to compute summary statistics for numeric columns in the DataFrame. This includes:\n  - **count**: Number of non-null entries.\n  - **mean**: Average value.\n  - **std**: Standard deviation (spread of data).\n  - **min**: Minimum value.\n  - **25%**: 25th percentile (value below which 25% of the data falls).\n  - **50%**: Median (middle value, 50th percentile).\n  - **75%**: 75th percentile (value below which 75% of the data falls).\n  - **max**: Maximum value."
-            
-            elif "df.dropna()" in code:
-                explanation += "- **Dropping Missing Values**: You used `df.dropna()` to remove rows containing any missing (NaN) values from the DataFrame. This creates a new DataFrame (`df_cleaned`) with only complete rows, ensuring no gaps in the data for further analysis."
-            
-            elif "df[[" in code and "]]" in code:
-                explanation += "- **Column Selection**: You selected specific columns from the DataFrame using `df[['col1', 'col2']]`. This extracts only the named columns, creating a new DataFrame with just those subsets of the original data."
-            
-            elif "df[df[" in code:
-                explanation += "- **Row Filtering**: You filtered rows based on a condition (e.g., `df[df['col'] > value]`). This keeps only the rows where the condition is true, reducing the DataFrame to a subset that meets your criteria."
-            
-            elif "df['" in code and ".value_counts()" in code:
-                explanation += "- **Value Counts**: You used `.value_counts()` on a column (e.g., `df['col'].value_counts()`) to count the frequency of each unique value in that column. This is useful for understanding the distribution of categorical data."
-            
+            if "df.shape" in code:
+                explanation += "- **Shape**: Showed dimensions of the DataFrame as (rows, columns)."
+            elif "df.head()" in code or "df.tail()" in code:
+                explanation += "- **Head and Tail**: Displayed the first and/or last 5 rows of the DataFrame."
+            elif "df.dtypes" in code:
+                explanation += "- **Data Types**: Listed the data type of each column."
+            elif "df['" in code and "df[[" not in code:
+                explanation += "- **Single Column**: Selected a single column as a Series."
+            elif "df[[" in code:
+                explanation += "- **Multiple Columns**: Selected multiple columns as a DataFrame."
+            elif "df[df[" in code and "'Asia'" not in code:
+                explanation += "- **Filtering**: Filtered rows based on a condition."
+            elif ".value_counts()" in code:
+                explanation += "- **Value Counts**: Counted unique values in a column."
+            elif "df.loc[" in code:
+                explanation += "- **loc**: Selected data by label."
+            elif "df.iloc[" in code:
+                explanation += "- **iloc**: Selected data by position."
+            elif "df.describe()" in code:
+                explanation += "- **Describe**: Generated detailed summary statistics for numeric columns:\n" \
+                              "  - **count**: Number of non-null values in each column.\n" \
+                              "  - **mean**: Arithmetic average of the values.\n" \
+                              "  - **std**: Standard deviation, measuring the spread of data around the mean.\n" \
+                              "  - **min**: Smallest value in the column.\n" \
+                              "  - **25%**: First quartile (Q1), value below which 25% of the data lies.\n" \
+                              "  - **50%**: Median (Q2), middle value splitting the data in half.\n" \
+                              "  - **75%**: Third quartile (Q3), value below which 75% of the data lies.\n" \
+                              "  - **max**: Largest value in the column."
+            elif "df.mean(" in code:
+                explanation += "- **Averages**: Calculated means of numeric columns."
+            elif "plt.plot(" in code and "label=" in code:
+                explanation += "- **Overlay Plot**: Plotted two numeric columns to explore correlations."
             elif "plt.plot(" in code:
-                explanation += "- **Line Plot**: You created a line plot with `plt.plot()`. This connects data points in a numeric column with a continuous line, showing trends or patterns over the data’s index."
-            
-            elif "plt.scatter(" in code:
-                explanation += "- **Scatter Plot**: You created a scatter plot with `plt.scatter()`. This plots individual points for two numeric columns, showing their relationship without connecting them."
-            
-            elif ".plot(kind='bar')" in code:
-                explanation += "- **Bar Chart**: You created a bar chart with `.plot(kind='bar')`. This displays categorical data as bars, where the height represents the count or value of each category."
-            
+                explanation += "- **Line Graph**: Created a line graph with coded X and Y axes."
+            elif "plt.bar(" in code and "df[df[" in code:
+                explanation += "- **Specific Value Chart**: Filtered rows by a specific value and plotted a bar chart."
+            elif "plt.bar(" in code:
+                explanation += "- **Bar Chart**: Created a bar chart with coded X and Y axes."
             elif "plt.hist(" in code:
-                explanation += "- **Histogram**: You created a histogram with `plt.hist()`. This shows the distribution of a numeric column by grouping values into bins (e.g., `bins=10`), with bar heights indicating frequency."
-            
+                explanation += "- **Histogram**: Showed the distribution of a numeric column.\n" \
+                              "  - **`np.linspace`**: Used to create evenly spaced bin edges between the column’s minimum and maximum values. Here, it divides the range into 10 intervals (11 edges), ensuring bins cover the full data range dynamically.\n" \
+                              "  - **Bins**: The number of intervals or buckets the data is divided into. Each bar’s height shows the frequency (count) of values within that bin’s range."
             elif "df.groupby(" in code:
-                explanation += "- **Grouping and Aggregation**: You used `df.groupby()` to group the DataFrame by a categorical column and applied an aggregation (e.g., `.mean()`) to summarize a numeric column for each group."
-            
-            elif "df.sort_values(" in code:
-                explanation += "- **Sorting**: You sorted the DataFrame with `df.sort_values(by='col')`, ordering rows based on the values in the specified column, either ascending or descending."
-            
-            elif "df['" in code and "=" in code and not ".value_counts()" in code:
-                explanation += "- **Adding a Column**: You added a new column to the DataFrame (e.g., `df['new_col'] = ...`). This creates or modifies a column based on an operation, such as adding two existing columns or applying a calculation."
-            
-            elif "df.rename(" in code:
-                explanation += "- **Renaming Columns**: You used `df.rename(columns={'old': 'new'})` to change the name of one or more columns in the DataFrame, making it more readable or consistent."
+                explanation += "- **Groupby**: Grouped data and calculated averages."
+            elif "IQR" in code or "quantile" in code:
+                explanation += "- **Outliers**: Identified and highlighted outliers using the IQR method."
 
             if "st.pyplot(plt)" in code:
-                explanation += "\n- **Displaying the Plot**: You used `st.pyplot(plt)` to render the Matplotlib plot in the Streamlit app."
+                explanation += "\n- **Display**: Rendered the plot in Streamlit."
 
-            st.write(explanation)
+            st.markdown(explanation, unsafe_allow_html=True)
 
         except Exception as e:
             sys.stdout = sys_stdout
-            st.error(f"Error: {e}")
+            st.error(f"🚨 Error: {e}")
             st.exception(e)
         finally:
             sys.stdout = sys_stdout  # Always restore stdout
 
-    # Mark as complete
-    if st.button("Mark as Complete", key=f"complete_{stage_name}"):
-        if stage_name not in st.session_state['progress']:
-            st.session_state['progress'].append(stage_name)
-            st.success(f"{stage_name} completed!")
-            st.rerun()
-
 # Show the selected stage
-display_stage(current_stage)
+display_stage(st.session_state['current_stage_idx'])
